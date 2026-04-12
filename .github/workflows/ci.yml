@@ -22,8 +22,11 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Install dependencies (Root Workspace)
-        run: npm ci
+      - name: Install dependencies (Root)
+        # Using rm -rf package-lock.json correctly downloads Linux bindings while bypassing the Mac lockfile!
+        run: |
+          rm -rf package-lock.json node_modules frontend/node_modules backend/node_modules
+          npm install
 
       - name: Lint and Build Frontend
         run: |
