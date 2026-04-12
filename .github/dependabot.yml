@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # Maintain root dependencies (husky, prettier, etc.)
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+
+  # Maintain Frontend dependencies (React, Vite, etc.)
+  - package-ecosystem: 'npm'
+    directory: '/frontend'
+    schedule:
+      interval: 'weekly'
+
+  # Maintain Backend dependencies (Express, Node, etc.)
+  - package-ecosystem: 'npm'
+    directory: '/backend'
+    schedule:
+      interval: 'weekly'

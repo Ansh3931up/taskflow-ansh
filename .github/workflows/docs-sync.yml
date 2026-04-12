@@ -1,0 +1,27 @@
+name: 'Docs-as-Code Sync'
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/adr/**'
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Auto-Compile ADR array to README
+        run: node scripts/update_readme.js
+
+      - name: Commit Auto-Generated Changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'docs: auto-update ADR index in README'

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+echo "Applying Prettier Formatting..."
+npx prettier --write .
+
+echo "Linting Frontend Workspace..."
+npm run lint --workspace=frontend -- --fix
+
+echo "Running Lint-Staged for generic formatting..."
+npx lint-staged
