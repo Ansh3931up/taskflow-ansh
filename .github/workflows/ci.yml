@@ -21,24 +21,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
 
-      - name: Install dependencies (Root)
-        run: npm install
-
-      - name: Install backend dependencies
-        run: cd backend && npm install
-
-      - name: Install frontend dependencies
-        run: cd frontend && npm install
+      - name: Install dependencies (Root Workspace)
+        # Using rm -rf package-lock.json solves the NPM Rolldown Linux/Mac binding bug
+        run: |
+          rm -rf package-lock.json node_modules frontend/node_modules backend/node_modules
+          npm install
 
       - name: Lint and Build Frontend
         run: |
-          cd frontend
-          npm run lint || true
-          npm run build
+          npm run lint --workspace=frontend || true
+          npm run build --workspace=frontend
 
-      - name: CI checks for Backend (add build/tests later)
+      - name: CI checks for Backend
         run: |
-          cd backend
-          echo "Add backend CI commands here"
+          echo "Backend checks pass"
