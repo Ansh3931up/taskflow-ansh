@@ -16,5 +16,13 @@ jobs:
       - uses: googleapis/release-please-action@v4
         with:
           release-type: node
+          path: frontend
           # This automatically parses conventional commits (feat: / fix: / etc)
-          # Updates CHANGELOG.md, bumps package.json, and pushes GitHub tags!
+          # Updates CHANGELOG.md, bumps package.json, and pushes GitHub tags for frontend.
+
+      - uses: googleapis/release-please-action@v4
+        with:
+          release-type: node
+          path: backend
+          # This automatically parses conventional commits (feat: / fix: / etc)
+          # Updates CHANGELOG.md, bumps package.json, and pushes GitHub tags for backend.
