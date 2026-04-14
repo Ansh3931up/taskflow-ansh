@@ -1,2 +1,1 @@
-// Barrel file for Controllers
-export {};
+export * from './auth.controller';

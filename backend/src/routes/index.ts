@@ -1,9 +1,9 @@
 import { Router } from 'express';
+import authRoutes from './auth.routes';
 
 const router = Router();
 
-// Inject specific module routes here in the future
-// import userRoutes from './user.routes';
-// router.use('/users', userRoutes);
+// Strictly mapped directly to the Mock API appendix paths
+router.use('/auth', authRoutes);
 
 export default router;

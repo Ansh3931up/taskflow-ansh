@@ -27,8 +27,8 @@ app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Core API Routing (V1 Versioning)
-app.use('/api/v1', apiRoutes);
+// Core API Routing (Strictly respects the appendix Base URL: http://localhost:4000)
+app.use('/', apiRoutes);
 
 // Global error handling middleware (must theoretically sit below all routes)
 app.use(errorHandler);
