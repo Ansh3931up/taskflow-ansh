@@ -29,6 +29,7 @@ CREATE TABLE "tasks" (
   status task_status DEFAULT 'todo',
   priority task_priority DEFAULT 'medium',
   project_id UUID NOT NULL REFERENCES "projects"(id) ON DELETE CASCADE,
+  creator_id UUID NOT NULL REFERENCES "users"(id),
   assignee_id UUID REFERENCES "users"(id) ON DELETE SET NULL,
   due_date DATE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

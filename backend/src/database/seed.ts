@@ -30,25 +30,28 @@ const runSeed = async () => {
 
     // 3. Seed 3 Tasks (Different Statuses)
     await pool.query(
-      `INSERT INTO tasks (id, title, description, status, priority, project_id, assignee_id) VALUES 
-       ($1, $2, $3, 'done', 'high', $4, $5),
-       ($6, $7, $8, 'in_progress', 'medium', $4, $5),
-       ($9, $10, $11, 'todo', 'low', $4, null);`,
+      `INSERT INTO tasks (id, title, description, status, priority, project_id, creator_id, assignee_id) VALUES 
+       ($1, $2, $3, 'done', 'high', $4, $5, $6),
+       ($7, $8, $9, 'in_progress', 'medium', $4, $5, $6),
+       ($10, $11, $12, 'todo', 'low', $4, $5, null);`,
       [
         uuidv7(),
         'Deploy Postgres Docker',
         'Stood up the DB correctly',
         projectId,
-        userId,
+        userId, // creator_id
+        userId, // assignee_id
         uuidv7(),
         'Review Migrations',
         'Check Dbmate up/down pure SQL architecture',
         projectId,
-        userId,
+        userId, // creator_id
+        userId, // assignee_id
         uuidv7(),
         'Grade Frontend API',
         'Click around the ShadCN UI',
         projectId,
+        userId, // creator_id
       ],
     );
     logger.info('✅ Seeded 3 Tasks safely with UUIDv7.');

@@ -1,15 +1,20 @@
 {
   "info": {
-    "name": "TaskFlow API - Take Home Evaluation",
-    "description": "Collection strictly mapped to the required Appendix endpoints for the TaskFlow application assessment.",
+    "name": "TaskFlow - Take Home Evaluator API",
+    "description": "Auto-configured workspace mapping the Mock Appendix. Dynamically saves authentication tokens and UUIDs into native collection variables for highly rapid testing flows.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    { "key": "token", "value": "jwt-token-will-save-here-automatically", "type": "string" },
+    { "key": "projectId", "value": "project-uuid-will-save-here-automatically", "type": "string" },
+    { "key": "taskId", "value": "task-uuid-will-save-here-automatically", "type": "string" }
+  ],
   "item": [
     {
-      "name": "Auth",
+      "name": "1. Authentication",
       "item": [
         {
-          "name": "Register",
+          "name": "Register User",
           "request": {
             "method": "POST",
             "header": [],
@@ -25,10 +30,24 @@
               "port": "4000",
               "path": ["auth", "register"]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if(response.token) {",
+                  "  pm.collectionVariables.set('token', response.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
-          "name": "Login",
+          "name": "Login User",
           "request": {
             "method": "POST",
             "header": [],
@@ -44,18 +63,37 @@
               "port": "4000",
               "path": ["auth", "login"]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if(response.token) {",
+                  "  pm.collectionVariables.set('token', response.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Projects",
+      "name": "2. Projects API",
       "item": [
         {
-          "name": "List Projects",
+          "name": "Create Project",
           "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Website Redesign\",\n    \"description\": \"Q2 project\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
             "url": {
               "raw": "http://localhost:4000/projects",
               "protocol": "http",
@@ -63,18 +101,25 @@
               "port": "4000",
               "path": ["projects"]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if(response.id) { pm.collectionVariables.set('projectId', response.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
-          "name": "Create Project",
+          "name": "List Projects",
           "request": {
-            "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name\": \"Website Redesign\",\n    \"description\": \"Q2 project\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": {
               "raw": "http://localhost:4000/projects",
               "protocol": "http",
@@ -88,14 +133,13 @@
           "name": "Get Project (With Tasks)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": {
-              "raw": "http://localhost:4000/projects/:id",
+              "raw": "http://localhost:4000/projects/{{projectId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "4000",
-              "path": ["projects", ":id"],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
+              "path": ["projects", "{{projectId}}"]
             }
           }
         },
@@ -103,19 +147,18 @@
           "name": "Update Project",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"Updated Name\"\n}",
+              "raw": "{\n    \"name\": \"Updated Website Name\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "http://localhost:4000/projects/:id",
+              "raw": "http://localhost:4000/projects/{{projectId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "4000",
-              "path": ["projects", ":id"],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
+              "path": ["projects", "{{projectId}}"]
             }
           }
         },
@@ -123,55 +166,64 @@
           "name": "Delete Project",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": {
-              "raw": "http://localhost:4000/projects/:id",
+              "raw": "http://localhost:4000/projects/{{projectId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "4000",
-              "path": ["projects", ":id"],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
+              "path": ["projects", "{{projectId}}"]
             }
           }
         }
       ]
     },
     {
-      "name": "Tasks",
+      "name": "3. Tasks API",
       "item": [
-        {
-          "name": "List Tasks (Filtered)",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
-            "url": {
-              "raw": "http://localhost:4000/projects/:id/tasks?status=todo",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "4000",
-              "path": ["projects", ":id", "tasks"],
-              "query": [{ "key": "status", "value": "todo" }],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
-            }
-          }
-        },
         {
           "name": "Create Task",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"title\": \"Design homepage\",\n    \"priority\": \"high\",\n    \"due_date\": \"2026-04-15\"\n}",
+              "raw": "{\n    \"title\": \"Design homepage\",\n    \"priority\": \"high\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "http://localhost:4000/projects/:id/tasks",
+              "raw": "http://localhost:4000/projects/{{projectId}}/tasks",
               "protocol": "http",
               "host": ["localhost"],
               "port": "4000",
-              "path": ["projects", ":id", "tasks"],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
+              "path": ["projects", "{{projectId}}", "tasks"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if(response.id) { pm.collectionVariables.set('taskId', response.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Tasks (Filtered)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "http://localhost:4000/projects/{{projectId}}/tasks?status=todo",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4000",
+              "path": ["projects", "{{projectId}}", "tasks"],
+              "query": [{ "key": "status", "value": "todo" }]
             }
           }
         },
@@ -179,19 +231,18 @@
           "name": "Update Task",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "body": {
               "mode": "raw",
               "raw": "{\n    \"status\": \"done\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "http://localhost:4000/tasks/:id",
+              "raw": "http://localhost:4000/tasks/{{taskId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "4000",
-              "path": ["tasks", ":id"],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
+              "path": ["tasks", "{{taskId}}"]
             }
           }
         },
@@ -199,14 +250,13 @@
           "name": "Delete Task",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": {
-              "raw": "http://localhost:4000/tasks/:id",
+              "raw": "http://localhost:4000/tasks/{{taskId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "4000",
-              "path": ["tasks", ":id"],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
+              "path": ["tasks", "{{taskId}}"]
             }
           }
         }
