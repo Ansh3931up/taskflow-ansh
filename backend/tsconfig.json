@@ -1,11 +1,14 @@
 {
   "extends": "../tsconfig.base.json",
+  "ts-node": {
+    "files": true
+  },
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./",
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "types": ["node", "express"],
+    "types": ["node"],
     "sourceMap": true,
     "declaration": true
   },
