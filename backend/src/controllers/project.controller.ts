@@ -5,11 +5,14 @@ import {
   getProject as svcGetProject,
   updateProject as svcUpdateProject,
   deleteProject as svcDeleteProject,
+  getProjectStats as svcGetProjectStats,
 } from '../services';
 import { asyncHandler } from '../utils/asyncHandler';
 
 const listProjects = asyncHandler(async (req: Request, res: Response) => {
-  const data = await svcListProjects(req.user!.id);
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const data = await svcListProjects(req.user!.id, page, limit);
   res.status(200).json(data);
 });
 
@@ -25,12 +28,17 @@ const getProject = asyncHandler(async (req: Request, res: Response) => {
 
 const updateProject = asyncHandler(async (req: Request, res: Response) => {
   const data = await svcUpdateProject(req.params.id as string, req.user!.id, req.body);
-  res.status(200).json(data); // 200 mapping explicitly defined by Mock API
+  res.status(200).json(data);
 });
 
 const deleteProject = asyncHandler(async (req: Request, res: Response) => {
   await svcDeleteProject(req.params.id as string, req.user!.id);
-  res.status(204).send(); // Strictly mandated 204 No Content return
+  res.status(204).send();
 });
 
-export { listProjects, createProject, getProject, updateProject, deleteProject };
+const getProjectStats = asyncHandler(async (req: Request, res: Response) => {
+  const data = await svcGetProjectStats(req.params.id as string, req.user!.id);
+  res.status(200).json(data);
+});
+
+export { listProjects, createProject, getProject, updateProject, deleteProject, getProjectStats };

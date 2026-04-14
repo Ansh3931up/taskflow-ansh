@@ -9,9 +9,14 @@ import { asyncHandler } from '../utils/asyncHandler';
 
 const listTasks = asyncHandler(async (req: Request, res: Response) => {
   const { status, assignee } = req.query;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+
   const data = await svcListTasks(req.params.id as string, {
     status: status as string,
     assignee: assignee as string,
+    page,
+    limit,
   });
   res.status(200).json(data);
 });

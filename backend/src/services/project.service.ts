@@ -3,16 +3,18 @@ import pool from '../database';
 import { ApiError } from '../utils/ApiError';
 import { CreateProjectInput, UpdateProjectInput } from '../validations';
 
-const listProjects = async (userId: string) => {
+const listProjects = async (userId: string, page: number = 1, limit: number = 10) => {
+  const offset = (page - 1) * limit;
   const result = await pool.query(
     `SELECT DISTINCT p.id, p.name, p.description, p.owner_id, p.created_at
      FROM projects p
      LEFT JOIN tasks t ON p.id = t.project_id
      WHERE p.owner_id = $1 OR t.assignee_id = $1
-     ORDER BY p.created_at DESC`,
-    [userId],
+     ORDER BY p.created_at DESC
+     LIMIT $2 OFFSET $3`,
+    [userId, limit, offset],
   );
-  return { projects: result.rows };
+  return { projects: result.rows, page, limit };
 };
 
 const createProject = async (userId: string, data: CreateProjectInput) => {
@@ -84,4 +86,28 @@ const deleteProject = async (projectId: string, userId: string) => {
   return true;
 };
 
-export { listProjects, createProject, getProject, updateProject, deleteProject };
+const getProjectStats = async (projectId: string, userId: string) => {
+  const projectRes = await pool.query('SELECT owner_id FROM projects WHERE id = $1', [projectId]);
+  if (projectRes.rows.length === 0) throw new ApiError(404, 'not found');
+
+  const statusRes = await pool.query(
+    'SELECT status, COUNT(*)::int as count FROM tasks WHERE project_id = $1 GROUP BY status',
+    [projectId],
+  );
+
+  const assigneeRes = await pool.query(
+    `SELECT u.name as assignee_name, t.assignee_id, COUNT(*)::int as count 
+     FROM tasks t 
+     LEFT JOIN users u ON t.assignee_id = u.id 
+     WHERE t.project_id = $1 AND t.assignee_id IS NOT NULL 
+     GROUP BY t.assignee_id, u.name`,
+    [projectId],
+  );
+
+  return {
+    by_status: statusRes.rows,
+    by_assignee: assigneeRes.rows,
+  };
+};
+
+export { listProjects, createProject, getProject, updateProject, deleteProject, getProjectStats };

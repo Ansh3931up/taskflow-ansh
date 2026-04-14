@@ -7,6 +7,7 @@ import {
   deleteProject,
   listTasks,
   createTask,
+  getProjectStats,
 } from '../controllers';
 import { requireAuth, validateRequest } from '../middlewares';
 import { createProjectSchema, updateProjectSchema, createTaskSchema } from '../validations';
@@ -17,11 +18,15 @@ router.use(requireAuth);
 
 router.get('/', listProjects);
 router.post('/', validateRequest(createProjectSchema), createProject);
+
+// Bonus Routing (MUST precede /:id to prevent parameter capture override)
+router.get('/:id/stats', getProjectStats);
+
 router.get('/:id', getProject);
 router.patch('/:id', validateRequest(updateProjectSchema), updateProject);
 router.delete('/:id', deleteProject);
 
-// Nested routing mapping for task filtering internally within specific projects
+// Nested Tasks mapped strictly
 router.get('/:id/tasks', listTasks);
 router.post('/:id/tasks', validateRequest(createTaskSchema), createTask);
 

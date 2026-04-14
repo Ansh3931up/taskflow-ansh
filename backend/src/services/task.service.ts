@@ -3,7 +3,10 @@ import pool from '../database';
 import { ApiError } from '../utils/ApiError';
 import { CreateTaskInput, UpdateTaskInput } from '../validations';
 
-const listTasks = async (projectId: string, filters: { status?: string; assignee?: string }) => {
+const listTasks = async (
+  projectId: string,
+  filters: { status?: string; assignee?: string; page?: number; limit?: number },
+) => {
   let query = 'SELECT * FROM tasks WHERE project_id = $1';
   const values: any[] = [projectId];
   let paramIndex = 2;
@@ -17,14 +20,18 @@ const listTasks = async (projectId: string, filters: { status?: string; assignee
     values.push(filters.assignee);
   }
 
-  query += ' ORDER BY created_at DESC';
+  const page = filters.page || 1;
+  const limit = filters.limit || 10;
+  const offset = (page - 1) * limit;
+
+  query += ` ORDER BY created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+  values.push(limit, offset);
 
   const result = await pool.query(query, values);
-  return { tasks: result.rows };
+  return { tasks: result.rows, page, limit };
 };
 
 const createTask = async (projectId: string, creatorId: string, data: CreateTaskInput) => {
-  // Validate project actually physically exists
   const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1', [projectId]);
   if (projectCheck.rows.length === 0) throw new ApiError(404, 'project not found');
 
@@ -77,7 +84,6 @@ const updateTask = async (taskId: string, data: UpdateTaskInput) => {
 };
 
 const deleteTask = async (taskId: string, userId: string) => {
-  // HIDDEN GRADING EVALUATION: "Delete task (project owner or task creator only)!"
   const taskRes = await pool.query(
     `SELECT t.creator_id, p.owner_id 
      FROM tasks t
@@ -90,7 +96,7 @@ const deleteTask = async (taskId: string, userId: string) => {
 
   const { creator_id, owner_id } = taskRes.rows[0];
   if (creator_id !== userId && owner_id !== userId) {
-    throw new ApiError(403, 'forbidden'); // You specifically MUST NOT conflate 401 with 403.
+    throw new ApiError(403, 'forbidden');
   }
 
   await pool.query('DELETE FROM tasks WHERE id = $1', [taskId]);
