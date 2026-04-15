@@ -23,3 +23,6 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
     next(new ApiError(401, 'unauthorized'));
   }
 };
+
+// Alias for cleaner route registration semantics
+export const authenticate = requireAuth;

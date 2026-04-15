@@ -9,7 +9,8 @@ import { asyncHandler } from '../utils/asyncHandler';
 export const validateRequest = (schema: z.ZodSchema) => {
   return asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await schema.parseAsync(req.body);
+      const parsed = await schema.parseAsync(req.body);
+      (req as Request).body = parsed;
       next();
     } catch (error) {
       if (error instanceof z.ZodError) {

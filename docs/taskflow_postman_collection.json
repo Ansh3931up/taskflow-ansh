@@ -1,214 +1,353 @@
 {
   "info": {
-    "name": "TaskFlow API - Take Home Evaluation",
-    "description": "Collection strictly mapped to the required Appendix endpoints for the TaskFlow application assessment.",
+    "name": "TaskFlow-Ansh Backend API",
+    "description": "Postman collection for the TaskFlow-Ansh backend. Covers Authentication, Projects, Tasks, and Health Check endpoints.\n\nUsage:\n1. Run 'Register User' to create an account.\n2. Run 'Login User' — the JWT token is auto-saved to the {{jwt_token}} variable.\n3. All protected endpoints automatically use {{jwt_token}} via the Authorization header.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "project_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "task_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
   "item": [
     {
-      "name": "Auth",
+      "name": "Health Check",
       "item": [
         {
-          "name": "Register",
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Returns server health status and current timestamp. No authentication required."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "description": "Public endpoints for user registration and login. No JWT required.",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "    pm.collectionVariables.set('jwt_token', res.token);",
+                  "    console.log('Token auto-saved from registration.');",
+                  "}",
+                  "if (res.user && res.user.id) {",
+                  "    console.log('Registered user ID: ' + res.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"Jane Doe\",\n    \"email\": \"jane.doe@example.com\",\n    \"password\": \"secret123\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"secure_password_123\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:4000/auth/register",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "4000",
-              "path": ["auth", "register"]
-            }
-          }
+            "description": "Creates a new user account.\n\nRequired fields:\n- name (string, min 1 char)\n- email (string, valid email)\n- password (string, min 6 chars)\n\nReturns: { token, user: { id, name, email } }"
+          },
+          "response": []
         },
         {
-          "name": "Login",
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "    pm.collectionVariables.set('jwt_token', res.token);",
+                  "    console.log('Token auto-saved from login.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"secure_password_123\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:4000/auth/login",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "4000",
-              "path": ["auth", "login"]
-            }
-          }
+            "description": "Authenticates an existing user.\n\nRequired fields:\n- email (string, valid email)\n- password (string, min 1 char)\n\nReturns: { token, user: { id, name, email } }\n\nThe JWT token is automatically saved to the {{jwt_token}} collection variable via the test script."
+          },
+          "response": []
         }
       ]
     },
     {
       "name": "Projects",
+      "description": "CRUD operations for projects. All endpoints require JWT authentication.",
       "item": [
         {
           "name": "List Projects",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
             "url": {
-              "raw": "http://localhost:4000/projects",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "4000",
-              "path": ["projects"]
-            }
-          }
+              "raw": "{{base_url}}/projects?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["projects"],
+              "query": [
+                { "key": "page", "value": "1", "description": "Page number (default: 1)" },
+                { "key": "limit", "value": "10", "description": "Items per page (default: 10)" }
+              ]
+            },
+            "description": "Lists all projects owned by the authenticated user with pagination.\n\nQuery params:\n- page (number, default 1)\n- limit (number, default 10)\n\nReturns: paginated list of projects"
+          },
+          "response": []
         },
         {
           "name": "Create Project",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "    pm.collectionVariables.set('project_id', res.id);",
+                  "    console.log('Project ID auto-saved: ' + res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects",
+              "host": ["{{base_url}}"],
+              "path": ["projects"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"Website Redesign\",\n    \"description\": \"Q2 project\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "raw": "{\n  \"name\": \"Alpha Core Pipeline\",\n  \"description\": \"Main project for tracking core infrastructure tasks\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:4000/projects",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "4000",
-              "path": ["projects"]
-            }
-          }
+            "description": "Creates a new project for the authenticated user.\n\nRequired fields:\n- name (string, min 1 char)\n\nOptional fields:\n- description (string)\n\nReturns: the created project object. The project ID is auto-saved to {{project_id}}."
+          },
+          "response": []
         },
         {
-          "name": "Get Project (With Tasks)",
+          "name": "Get Project",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
             "url": {
-              "raw": "http://localhost:4000/projects/:id",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "4000",
-              "path": ["projects", ":id"],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
-            }
-          }
+              "raw": "{{base_url}}/projects/{{project_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_id}}"]
+            },
+            "description": "Retrieves a single project by its ID.\n\nPath params:\n- id (UUID) — use {{project_id}} variable\n\nReturns: project object"
+          },
+          "response": []
         },
         {
           "name": "Update Project",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_id}}"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"Updated Name\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "raw": "{\n  \"name\": \"Alpha Core Pipeline v2\",\n  \"description\": \"Updated description for the core pipeline\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:4000/projects/:id",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "4000",
-              "path": ["projects", ":id"],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
-            }
-          }
+            "description": "Updates an existing project. Only the project owner can update.\n\nOptional fields (at least one required):\n- name (string, min 1 char)\n- description (string)\n\nReturns: updated project object"
+          },
+          "response": []
         },
         {
           "name": "Delete Project",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
             "url": {
-              "raw": "http://localhost:4000/projects/:id",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "4000",
-              "path": ["projects", ":id"],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
-            }
-          }
+              "raw": "{{base_url}}/projects/{{project_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_id}}"]
+            },
+            "description": "Deletes a project. Only the project owner can delete.\n\nPath params:\n- id (UUID) — use {{project_id}} variable\n\nReturns: 204 No Content"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Project Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/stats",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_id}}", "stats"]
+            },
+            "description": "Retrieves task statistics for a specific project (counts by status, priority, etc.).\n\nPath params:\n- id (UUID) — use {{project_id}} variable\n\nReturns: project statistics object"
+          },
+          "response": []
         }
       ]
     },
     {
       "name": "Tasks",
+      "description": "Task management endpoints. Tasks are nested under projects for creation/listing, and standalone for updates/deletes. All endpoints require JWT authentication.",
       "item": [
         {
-          "name": "List Tasks (Filtered)",
+          "name": "List Tasks (by Project)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
             "url": {
-              "raw": "http://localhost:4000/projects/:id/tasks?status=todo",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "4000",
-              "path": ["projects", ":id", "tasks"],
-              "query": [{ "key": "status", "value": "todo" }],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
-            }
-          }
+              "raw": "{{base_url}}/projects/{{project_id}}/tasks?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_id}}", "tasks"],
+              "query": [
+                { "key": "page", "value": "1", "description": "Page number (default: 1)" },
+                { "key": "limit", "value": "10", "description": "Items per page (default: 10)" },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filter by status: todo | in_progress | done",
+                  "disabled": true
+                },
+                {
+                  "key": "assignee",
+                  "value": "",
+                  "description": "Filter by assignee user ID (UUID)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Lists all tasks for a given project, with optional filtering and pagination.\n\nPath params:\n- id (UUID) — project ID, use {{project_id}} variable\n\nQuery params:\n- page (number, default 1)\n- limit (number, default 10)\n- status (string, optional) — filter by: todo, in_progress, done\n- assignee (string, optional) — filter by assignee user ID\n\nReturns: paginated list of tasks"
+          },
+          "response": []
         },
         {
           "name": "Create Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "    pm.collectionVariables.set('task_id', res.id);",
+                  "    console.log('Task ID auto-saved: ' + res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/tasks",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_id}}", "tasks"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"title\": \"Design homepage\",\n    \"priority\": \"high\",\n    \"due_date\": \"2026-04-15\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "raw": "{\n  \"title\": \"Set up CI/CD pipeline\",\n  \"description\": \"Configure GitHub Actions for automated testing and deployment\",\n  \"priority\": \"high\",\n  \"assignee_id\": null,\n  \"due_date\": \"2026-04-30\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:4000/projects/:id/tasks",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "4000",
-              "path": ["projects", ":id", "tasks"],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
-            }
-          }
+            "description": "Creates a new task within a project.\n\nPath params:\n- id (UUID) — project ID, use {{project_id}} variable\n\nRequired fields:\n- title (string, min 1 char)\n\nOptional fields:\n- description (string)\n- priority (enum: low | medium | high)\n- assignee_id (UUID or null)\n- due_date (string, date format)\n\nReturns: the created task object. The task ID is auto-saved to {{task_id}}."
+          },
+          "response": []
         },
         {
           "name": "Update Task",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tasks/{{task_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tasks", "{{task_id}}"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"status\": \"done\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "raw": "{\n  \"title\": \"Set up CI/CD pipeline (updated)\",\n  \"status\": \"in_progress\",\n  \"priority\": \"medium\",\n  \"assignee_id\": null,\n  \"due_date\": \"2026-05-15\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:4000/tasks/:id",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "4000",
-              "path": ["tasks", ":id"],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
-            }
-          }
+            "description": "Updates an existing task. Uses the standalone /tasks/:id route.\n\nPath params:\n- id (UUID) — task ID, use {{task_id}} variable\n\nOptional fields (at least one required):\n- title (string, min 1 char)\n- description (string)\n- status (enum: todo | in_progress | done)\n- priority (enum: low | medium | high)\n- assignee_id (UUID or null)\n- due_date (string, date format)\n\nReturns: updated task object"
+          },
+          "response": []
         },
         {
           "name": "Delete Task",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+            "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
             "url": {
-              "raw": "http://localhost:4000/tasks/:id",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "4000",
-              "path": ["tasks", ":id"],
-              "variable": [{ "key": "id", "value": "replace-with-uuid" }]
-            }
-          }
+              "raw": "{{base_url}}/tasks/{{task_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tasks", "{{task_id}}"]
+            },
+            "description": "Deletes a task. Uses the standalone /tasks/:id route.\n\nPath params:\n- id (UUID) — task ID, use {{task_id}} variable\n\nReturns: 204 No Content"
+          },
+          "response": []
         }
       ]
     }

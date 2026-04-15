@@ -4,59 +4,66 @@ import { v7 as uuidv7 } from 'uuid';
 import { logger } from '../utils/logger';
 
 const runSeed = async () => {
-  logger.info('🌱 Starting Database Seeding with Time-Ordered UUIDv7...');
+  logger.info('🌱 Initializing workspace with realistic project data...');
 
   try {
-    // 1. Seed User
     const hashedPassword = await bcrypt.hash('password123', 12);
     const userId = uuidv7();
 
+    // 1. Primary User
     await pool.query(
       `INSERT INTO users (id, name, email, password) 
        VALUES ($1, $2, $3, $4) 
        ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password;`,
-      [userId, 'Test Reviewer', 'test@example.com', hashedPassword],
+      [userId, 'Alex Johnson', 'test@example.com', hashedPassword],
     );
-    logger.info(`✅ Seeded User: test@example.com (UUIDv7: ${userId})`);
+    logger.info(`✅ User initialized: test@example.com`);
 
-    // 2. Seed Project
+    // 2. High-Fidelity Project
     const projectId = uuidv7();
     await pool.query(
       `INSERT INTO projects (id, name, description, owner_id) 
        VALUES ($1, $2, $3, $4);`,
-      [projectId, 'Take-Home Assessment Assessment', 'Grading the TaskFlow application', userId],
-    );
-    logger.info(`✅ Seeded Project: (UUIDv7: ${projectId})`);
-
-    // 3. Seed 3 Tasks (Different Statuses)
-    await pool.query(
-      `INSERT INTO tasks (id, title, description, status, priority, project_id, assignee_id) VALUES 
-       ($1, $2, $3, 'done', 'high', $4, $5),
-       ($6, $7, $8, 'in_progress', 'medium', $4, $5),
-       ($9, $10, $11, 'todo', 'low', $4, null);`,
       [
-        uuidv7(),
-        'Deploy Postgres Docker',
-        'Stood up the DB correctly',
         projectId,
+        'Platform Redesign Q4',
+        'Coordinating the migration to the new Luxury SaaS design system and Ruby/Slate components.',
         userId,
-        uuidv7(),
-        'Review Migrations',
-        'Check Dbmate up/down pure SQL architecture',
-        projectId,
-        userId,
-        uuidv7(),
-        'Grade Frontend API',
-        'Click around the ShadCN UI',
-        projectId,
       ],
     );
-    logger.info('✅ Seeded 3 Tasks safely with UUIDv7.');
 
-    logger.info('🎉 Seeding successfully completed!');
+    // 3. Operational Tasks
+    await pool.query(
+      `INSERT INTO tasks (id, title, description, status, priority, project_id, creator_id, assignee_id) VALUES 
+       ($1, $2, $3, 'done', 'high', $4, $5, $6),
+       ($7, $8, $9, 'in_progress', 'medium', $4, $5, $6),
+       ($10, $11, $12, 'todo', 'low', $4, $5, null);`,
+      [
+        uuidv7(),
+        'Component Audit',
+        'Audit all shared components for accessibility and responsiveness.',
+        projectId,
+        userId,
+        userId,
+        uuidv7(),
+        'API Synchronization',
+        'Ensure the new frontend endpoints match the backend controller signatures.',
+        projectId,
+        userId,
+        userId,
+        uuidv7(),
+        'Stakeholder Review',
+        'Prepare the prototype for the executive design review session.',
+        projectId,
+        userId,
+      ],
+    );
+    logger.info('✅ Project and tasks successfully provisioned.');
+
+    logger.info('🎉 Workplace initialized successfully!');
     process.exit(0);
   } catch (error) {
-    logger.error({ err: error }, '❌ Seeding Failed!');
+    logger.error({ err: error }, '❌ Initialization Failed!');
     process.exit(1);
   }
 };
