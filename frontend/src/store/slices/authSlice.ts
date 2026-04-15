@@ -1,29 +1,27 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 
-import type { User, AuthResponse } from '@/types';
+import type { User, AuthResponse, LoginCredentials, RegisterCredentials } from '@/types';
 import { authApi } from '@/api/auth';
+import { getApiErrorMessage } from '@/lib/api-helpers';
 
-// Strict Redux Thunk asynchronous mapping structurally binding natively against the exact API layers properly
 export const loginUser = createAsyncThunk(
   'auth/login',
-  async (credentials: any, { rejectWithValue }) => {
+  async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
-      const response = await authApi.login(credentials);
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.error || 'Login failed');
+      return await authApi.login(credentials);
+    } catch (error: unknown) {
+      return rejectWithValue(getApiErrorMessage(error, 'Login failed'));
     }
   },
 );
 
 export const registerUser = createAsyncThunk(
   'auth/register',
-  async (credentials: any, { rejectWithValue }) => {
+  async (credentials: RegisterCredentials, { rejectWithValue }) => {
     try {
-      const response = await authApi.register(credentials);
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.error || 'Registration failed');
+      return await authApi.register(credentials);
+    } catch (error: unknown) {
+      return rejectWithValue(getApiErrorMessage(error, 'Registration failed'));
     }
   },
 );

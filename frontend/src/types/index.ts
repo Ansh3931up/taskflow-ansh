@@ -36,3 +36,20 @@ export interface AuthResponse {
   token: string;
   user: User;
 }
+
+export type LoginCredentials = {
+  email: string;
+  password: string;
+};
+
+export type RegisterCredentials = {
+  name: string;
+  email: string;
+  password: string;
+};
+
+export interface ProjectStats {
+  by_status: { status: string; count: number }[];
+  by_assignee: { assignee_name: string | null; assignee_id: string; count: number }[];
+  unassigned_count: number;
+}
