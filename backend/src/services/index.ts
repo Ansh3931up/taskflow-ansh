@@ -4,3 +4,5 @@ export * as projectService from './project.service';
 export * from './project.service';
 export * as taskService from './task.service';
 export * from './task.service';
+export * as userService from './user.service';
+export * from './user.service';

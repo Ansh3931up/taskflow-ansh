@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "TaskFlow Backend API",
-    "description": "Complete Postman collection for the TaskFlow backend. Covers Authentication, Projects, Tasks, and Health Check endpoints.\n\nUsage:\n1. Run 'Register User' to create an account.\n2. Run 'Login User' — the JWT token is auto-saved to the {{jwt_token}} variable.\n3. All protected endpoints automatically use {{jwt_token}} via the Authorization header.",
+    "name": "TaskFlow-Ansh Backend API",
+    "description": "Postman collection for the TaskFlow-Ansh backend. Covers Authentication, Projects, Tasks, and Health Check endpoints.\n\nUsage:\n1. Run 'Register User' to create an account.\n2. Run 'Login User' — the JWT token is auto-saved to the {{jwt_token}} variable.\n3. All protected endpoints automatically use {{jwt_token}} via the Authorization header.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

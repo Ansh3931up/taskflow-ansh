@@ -24,21 +24,29 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Advanced Evaluator Requirements Mapping logically handling 401 / 403 explicit purging correctly
+// 401 = invalid/missing auth → logout. 403 = forbidden resource → do NOT logout (e.g. lost project access after reassigning yourself off the last task).
 apiClient.interceptors.response.use(
-  (response) => response.data, // Seamlessly unpack generic Axios bounds returning pure JSON schemas mathematically
+  (response) => response.data,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      // Actively purge strict Redux token boundaries natively!
-      store.dispatch(logout());
+    const status = error.response?.status;
+    const path = window.location.pathname;
 
-      // UX graceful fail-safes intelligently shifting URL routes dynamically cleanly
-      if (window.location.pathname !== '/login') {
+    if (status === 401) {
+      store.dispatch(logout());
+      if (path !== '/login') {
         window.location.href = '/login';
+      }
+      return Promise.reject(error.response?.data || error);
+    }
+
+    if (status === 403) {
+      // Lost access to this project (e.g. no longer owner/assignee/creator) — go to list with a full reload so projects refetch.
+      if (/^\/projects\/[^/]+$/.test(path)) {
+        window.location.assign('/projects');
+        return Promise.reject(error.response?.data || error);
       }
     }
 
-    // Throw standard logical rejection mapped exactly against Take-Home requirement formats correctly
     return Promise.reject(error.response?.data || error);
   },
 );

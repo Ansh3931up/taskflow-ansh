@@ -1,96 +1,128 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { loginUser, clearError } from '@/store/slices/authSlice';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { loginUser } from '@/store/slices/authSlice';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { PasswordInput } from '@/components/ui/password-input';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { ArrowRight, Loader2 } from 'lucide-react';
 
-export function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const Login: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  // Directly bind UI components natively against Thunk Redux mapping payloads safely
-  const { loading, error } = useAppSelector((state) => state.auth);
+  const { loading, error, isAuthenticated } = useAppSelector((state) => state.auth);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    dispatch(clearError()); // Clear legacy visual artifacts organically securely explicitly
-
-    // Asynchronous dispatch perfectly interacting structurally avoiding state races safely
-    const result = await dispatch(loginUser({ email, password }));
-
-    if (loginUser.fulfilled.match(result)) {
-      navigate('/projects');
+  useEffect(() => {
+    if (isAuthenticated) {
+      const redirectUrl = searchParams.get('redirect_url') || '/projects';
+      navigate(redirectUrl);
     }
+  }, [isAuthenticated, navigate, searchParams]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    dispatch(loginUser({ email, password }));
   };
 
   return (
-    <div className="w-full flex items-center justify-center min-h-[calc(100vh-10rem)]">
-      <Card className="w-full max-w-md shadow-lg border-t-4 border-t-primary bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight">Welcome back</CardTitle>
-          <CardDescription className="text-sm">
-            Enter your email below to seamlessly login to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="grid gap-5">
-            {error && (
-              <Alert variant="destructive">
+    <main className="flex min-h-screen items-center justify-center bg-background px-[max(1.25rem,env(safe-area-inset-left))] py-8 pb-[max(2rem,env(safe-area-inset-bottom))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-[max(2rem,env(safe-area-inset-top))]">
+      <div className="w-full max-w-md space-y-8">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 rounded-md text-foreground outline-none ring-offset-background transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
+            TF
+          </span>
+          <span className="font-display text-lg font-semibold tracking-tight">TaskFlow-Ansh</span>
+        </Link>
+
+        <Card className="shadow-elevated">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-xl">Sign in</CardTitle>
+            <CardDescription>
+              Enter your email and password to access your workspace.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {error ? (
+              <Alert variant="destructive" className="mb-6">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
-            )}
+            ) : null}
 
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-                className="h-11"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                className="h-11"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <Button
-              disabled={loading}
-              type="submit"
-              className="w-full font-bold h-11 text-base shadow-md"
-            >
-              {loading ? 'Logging in securely...' : 'Login to TaskFlow'}
-            </Button>
+            <form className="space-y-5" onSubmit={handleSubmit} aria-busy={loading}>
+              <div className="space-y-2">
+                <Label htmlFor="login-email">Email</Label>
+                <Input
+                  id="login-email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="login-password">Password</Label>
+                <PasswordInput
+                  id="login-password"
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
 
-            <div className="text-center text-sm font-medium mt-2 text-muted-foreground">
-              Don't have an account?{' '}
+              <Button type="submit" className="w-full transition-opacity" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                    Signing in…
+                  </>
+                ) : (
+                  <>
+                    Sign in
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col border-t border-border bg-muted/30 py-4">
+            <p className="text-center text-sm text-muted-foreground">
+              No account?{' '}
               <Link
                 to="/register"
-                // Advanced Prefetch Implementation mapping physically structurally avoiding UI latency cleanly
-                onMouseEnter={() => import('@/pages/Auth/Register')}
-                className="text-primary hover:underline transition-all"
+                className="font-medium text-primary underline-offset-4 hover:underline"
               >
-                Sign up securely
+                Register
               </Link>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    </main>
   );
-}
+};
+
+export default Login;

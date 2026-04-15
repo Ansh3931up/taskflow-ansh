@@ -2,12 +2,13 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  role?: string;
 }
 
 export interface Project {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   owner_id: string;
   created_at: string;
   tasks?: Task[];
@@ -19,12 +20,14 @@ export type TaskPriority = 'low' | 'medium' | 'high';
 export interface Task {
   id: string;
   title: string;
-  description?: string;
+  description?: string | null;
   status: TaskStatus;
   priority: TaskPriority;
   project_id: string;
-  assignee_id?: string;
-  due_date?: string;
+  /** Set by API for delete authorization (owner or creator may delete). */
+  creator_id?: string;
+  assignee_id?: string | null;
+  due_date?: string | null;
   created_at: string;
   updated_at: string;
 }
