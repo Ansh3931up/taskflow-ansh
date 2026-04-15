@@ -1,5 +1,7 @@
 # TaskFlow-Ansh
 
+**→ Pre-submit:** [docs/SUBMISSION_CHECKLIST.md](docs/SUBMISSION_CHECKLIST.md) (disqualifiers, README §1–§7, Docker, Render).
+
 ## 1. Overview
 
 **TaskFlow-Ansh** is a minimal but real **task management** product: users **register and log in**, create **projects**, add **tasks**, assign work to **themselves or others**, and filter by **status** and **assignee**. It is a **full-stack** submission: **PostgreSQL** + **REST API** + **React SPA**, with **Docker Compose** for a one-command demo environment.
@@ -35,7 +37,7 @@ Assume **Docker Desktop** (or Docker Engine + Compose plugin) is installed — *
 From a fresh clone you can run the stack with **no manual `.env` step**: Compose uses the same defaults as [`.env.example`](.env.example) (Postgres `postgres` / `postgres`, dev JWT, local CORS origins). Optional: `cp .env.example .env` and edit to override credentials or secrets.
 
 ```bash
-git clone https://github.com/<your-github>/taskflow-ansh.git
+git clone https://github.com/Ansh3931up/taskflow-ansh.git
 cd taskflow-ansh
 docker compose up --build
 # or: npm run docker:up
