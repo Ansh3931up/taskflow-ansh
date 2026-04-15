@@ -1,6 +1,6 @@
 {
   "name": "taskflow-ansh",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Monorepo root",
   "private": true,
   "workspaces": [
