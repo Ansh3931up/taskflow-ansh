@@ -1,3 +1,8 @@
-// Business Logic Layer
-// Services handle database calls and heavy lifting, completely unaware of Express 'req' or 'res'
-export {};
+export * as authService from './auth.service';
+export * from './auth.service';
+export * as projectService from './project.service';
+export * from './project.service';
+export * as taskService from './task.service';
+export * from './task.service';
+export * as userService from './user.service';
+export * from './user.service';

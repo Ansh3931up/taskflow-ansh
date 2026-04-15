@@ -1,8 +1,9 @@
 import app from './app';
 import pool from './database';
 import { logger } from './utils/logger';
+import { config } from './config';
 
-const PORT = process.env.PORT || 4000; // Assignment specified http://localhost:4000
+const PORT = config.PORT;
 
 const server = app.listen(PORT, () => {
   logger.info(`🚀 Taskflow Backend is gracefully live at http://localhost:${PORT}`);
