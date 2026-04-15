@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec \"ts-node --transpile-only\" src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "migrate": "dbmate up",
+    "start": "node dist/index.js",
+    "start:prod": "dbmate up && node dist/index.js"
   },
   "keywords": [],
   "author": "",

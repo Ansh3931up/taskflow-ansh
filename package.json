@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace=frontend\" \"npm run dev --workspace=backend\"",
     "start": "npm run start --workspace=backend",
+    "start:prod": "npm run start:prod --workspace=backend",
     "docker:up": "docker compose up --build",
     "prepare": "husky || true",
     "lint": "npm run lint --workspace=frontend",
