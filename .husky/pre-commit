@@ -1,10 +1,11 @@
 #!/bin/sh
 
-echo "Applying Prettier Formatting..."
-npx prettier --write .
+# Ensure node/npm/npx are in PATH (nvm, fnm, volta, homebrew, etc.)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-echo "Linting Frontend Workspace..."
-npm run lint --workspace=frontend -- --fix
+# Fallback: add common Node.js paths
+export PATH="/usr/local/bin:/opt/homebrew/bin:$HOME/.nvm/versions/node/$(node -v 2>/dev/null)/bin:$PATH" 2>/dev/null
 
-echo "Running Lint-Staged for generic formatting..."
+# Run lint-staged (formats + lints only staged files)
 npx lint-staged

@@ -1,7 +1,7 @@
 {
   "name": "taskflow-ansh",
-  "version": "1.0.0",
-  "description": "Monorepo root",
+  "version": "1.1.0",
+  "description": "TaskFlow-Ansh — monorepo root",
   "private": true,
   "workspaces": [
     "frontend",
@@ -9,14 +9,16 @@
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace=frontend\" \"npm run dev --workspace=backend\"",
+    "start": "npm run start --workspace=backend",
+    "docker:up": "docker compose up --build",
     "prepare": "husky",
-    "lint": "eslint .",
+    "lint": "npm run lint --workspace=frontend",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\""
   },
   "devDependencies": {
-    "concurrently": "^9.2.1",
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
+    "concurrently": "^9.2.1",
     "eslint": "^9.0.0",
     "husky": "^9.0.0",
     "lint-staged": "^16.4.0",
