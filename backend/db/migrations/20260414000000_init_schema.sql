@@ -2,7 +2,7 @@
 -- Generates pure UUIDs natively
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-CREATE TABLE "users" (
+CREATE TABLE IF NOT EXISTS "users" (
   id UUID PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE "users" (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE "projects" (
+CREATE TABLE IF NOT EXISTS "projects" (
   id UUID PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   description TEXT,
@@ -18,11 +18,20 @@ CREATE TABLE "projects" (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Strictly constrained Enum Types
-CREATE TYPE task_status AS ENUM ('todo', 'in_progress', 'done');
-CREATE TYPE task_priority AS ENUM ('low', 'medium', 'high');
+-- Safely create Enum Types
+DO $$ BEGIN
+    CREATE TYPE task_status AS ENUM ('todo', 'in_progress', 'done');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE "tasks" (
+DO $$ BEGIN
+    CREATE TYPE task_priority AS ENUM ('low', 'medium', 'high');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE IF NOT EXISTS "tasks" (
   id UUID PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   description TEXT,

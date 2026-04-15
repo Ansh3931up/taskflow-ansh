@@ -1,15 +1,21 @@
 export default [
   {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.git/**'],
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/.git/**',
+      'frontend/**',
+      'backend/**',
+    ],
   },
   {
-    files: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
+    files: ['**/*.js', '**/*.mjs'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
     },
     rules: {
-      // Let your individual frontend/backend TypeScript linters handle the strict rules
       'no-unused-vars': 'off',
       'no-console': 'off',
     },

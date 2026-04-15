@@ -1,30 +1,56 @@
 import type { ReactNode } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-
 import { lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAppSelector } from '@/store/hooks';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ThemeProvider } from '@/context/ThemeContext';
+import { AuthCardSkeleton } from '@/components/auth/AuthCardSkeleton';
 
-// Lazily map and violently decouple structural chunk boundaries strictly allowing seamless intent-prefetching safely!
-const Login = lazy(() => import('@/pages/Auth/Login').then((m) => ({ default: m.Login })));
-const Register = lazy(() => import('@/pages/Auth/Register').then((m) => ({ default: m.Register })));
+const Login = lazy(() => import('@/pages/Auth/Login'));
+const Register = lazy(() => import('@/pages/Auth/Register'));
 const ProjectsList = lazy(() =>
   import('@/pages/Projects/ProjectsList').then((m) => ({ default: m.ProjectsList })),
 );
-const ProjectDetail = lazy(() =>
-  import('@/pages/Projects/ProjectDetail').then((m) => ({ default: m.ProjectDetail })),
-);
+const ProjectDetail = lazy(() => import('@/pages/Projects/ProjectDetail'));
 
-// Strict Auth Guard Interceptor
-// Evaluator Constraint: "Protected routes: redirect to /login if unauthenticated"
+function SuspenseFallback() {
+  const { pathname } = useLocation();
+  if (pathname === '/login' || pathname === '/register') {
+    return <AuthCardSkeleton />;
+  }
+  return <PageSkeleton />;
+}
+
+function PageSkeleton() {
+  return (
+    <div className="container mx-auto px-4 md:px-6 py-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-9 w-56" />
+        <Skeleton className="h-10 w-36 rounded-lg" />
+      </div>
+      <Skeleton className="h-5 w-72" />
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3].map((n) => (
+          <div key={n} className="rounded-lg border overflow-hidden">
+            <Skeleton className="h-32 w-full rounded-none" />
+            <div className="p-4 space-y-3">
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 };
 
-// Inverse Auth Guard Engine
-// Evaluator UX Implicit Logic: Prevents logged-in users from seeing Auth screens
 const PublicOnlyRoute = ({ children }: { children: ReactNode }) => {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   if (isAuthenticated) return <Navigate to="/projects" replace />;
@@ -33,24 +59,10 @@ const PublicOnlyRoute = ({ children }: { children: ReactNode }) => {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Suspense
-        fallback={
-          <div className="flex h-screen items-center justify-center p-4">
-            <div className="animate-pulse flex items-center space-x-4">
-              <div className="rounded-full bg-primary h-12 w-12"></div>
-              <div className="flex-1 py-1">
-                <div className="h-4 bg-muted rounded w-3/4"></div>
-              </div>
-            </div>
-          </div>
-        }
-      >
-        <Routes>
-          {/* Dynamic Nested React-Router Wrapper Pattern */}
-          {/* Everything inside this route automatically inherits the <AppLayout /> Navbar wrapper */}
-          <Route element={<AppLayout />}>
-            {/* Public Context (Unauthenticated Users) */}
+    <ThemeProvider>
+      <BrowserRouter>
+        <Suspense fallback={<SuspenseFallback />}>
+          <Routes>
             <Route
               path="/login"
               element={
@@ -68,30 +80,30 @@ export default function App() {
               }
             />
 
-            {/* Secure Authenticated Context Domain */}
-            <Route
-              path="/projects"
-              element={
-                <ProtectedRoute>
-                  <ProjectsList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/projects/:id"
-              element={
-                <ProtectedRoute>
-                  <ProjectDetail />
-                </ProtectedRoute>
-              }
-            />
+            <Route element={<AppLayout />}>
+              <Route
+                path="/projects"
+                element={
+                  <ProtectedRoute>
+                    <ProjectsList />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/projects/:id"
+                element={
+                  <ProtectedRoute>
+                    <ProjectDetail />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Fallback Root Resolver Routing Path */}
-            <Route path="/" element={<Navigate to="/projects" replace />} />
-            <Route path="*" element={<Navigate to="/projects" replace />} />
-          </Route>
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+              <Route path="/" element={<Navigate to="/projects" replace />} />
+              <Route path="*" element={<Navigate to="/projects" replace />} />
+            </Route>
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
