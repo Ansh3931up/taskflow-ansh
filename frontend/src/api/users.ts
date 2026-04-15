@@ -1,9 +1,10 @@
 import api from '@/lib/api';
+import { unwrapApiData } from '@/lib/api-helpers';
 import type { User } from '@/types';
 
 export const usersApi = {
   list: async (): Promise<User[]> => {
-    const response: any = await api.get('/users');
-    return response.data;
+    const raw = await api.get<unknown>('/users');
+    return unwrapApiData<User[]>(raw);
   },
 };

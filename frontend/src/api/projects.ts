@@ -1,36 +1,44 @@
 import apiClient from '@/lib/api';
-import type { Project } from '@/types';
+import { unwrapApiData } from '@/lib/api-helpers';
+import type { Project, ProjectStats } from '@/types';
+
+type ProjectsListPayload = {
+  projects: Project[];
+  page: number;
+  limit: number;
+  total: number;
+};
 
 export const projectsApi = {
-  list: async (
-    page = 1,
-    limit = 10,
-  ): Promise<{ projects: Project[]; page: number; limit: number; total: number }> => {
-    const response: any = await apiClient.get(`/projects`, { params: { page, limit } });
-    return response.data as { projects: Project[]; page: number; limit: number; total: number };
+  list: async (page = 1, limit = 10): Promise<ProjectsListPayload> => {
+    const raw = await apiClient.get<unknown>(`/projects`, { params: { page, limit } });
+    return unwrapApiData<ProjectsListPayload>(raw);
   },
 
   getById: async (id: string): Promise<Project> => {
-    const response: any = await apiClient.get(`/projects/${id}`);
-    return response.data;
+    const raw = await apiClient.get<unknown>(`/projects/${id}`);
+    return unwrapApiData<Project>(raw);
   },
 
-  create: async (data: Partial<Project>): Promise<Project> => {
-    const response: any = await apiClient.post('/projects', data);
-    return response.data;
+  create: async (data: Partial<Pick<Project, 'name' | 'description'>>): Promise<Project> => {
+    const raw = await apiClient.post<unknown>('/projects', data);
+    return unwrapApiData<Project>(raw);
   },
 
-  update: async (id: string, data: Partial<Project>): Promise<Project> => {
-    const response: any = await apiClient.patch(`/projects/${id}`, data);
-    return response.data;
+  update: async (
+    id: string,
+    data: Partial<Pick<Project, 'name' | 'description'>>,
+  ): Promise<Project> => {
+    const raw = await apiClient.patch<unknown>(`/projects/${id}`, data);
+    return unwrapApiData<Project>(raw);
   },
 
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/projects/${id}`);
   },
 
-  getStats: async (id: string): Promise<any> => {
-    const response: any = await apiClient.get(`/projects/${id}/stats`);
-    return response.data;
+  getStats: async (id: string): Promise<ProjectStats> => {
+    const raw = await apiClient.get<unknown>(`/projects/${id}/stats`);
+    return unwrapApiData<ProjectStats>(raw);
   },
 };

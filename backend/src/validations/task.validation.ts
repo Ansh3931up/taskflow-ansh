@@ -7,7 +7,13 @@ const optionalAssigneeId = z.preprocess(
   z.union([z.string().uuid(), z.null()]).optional(),
 );
 
-const optionalDueDate = z.preprocess((v) => (v === '' ? undefined : v), z.string().optional());
+const optionalDueDate = z.preprocess(
+  (v) => (v === '' ? undefined : v),
+  z
+    .string()
+    .refine((s) => !Number.isNaN(Date.parse(s)), { message: 'invalid date' })
+    .optional(),
+);
 
 export const createTaskSchema = z.object({
   title: z.string().min(1, 'is required'),

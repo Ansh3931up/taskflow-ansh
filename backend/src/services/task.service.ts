@@ -53,27 +53,40 @@ const listTasks = async (
 };
 
 const createTask = async (projectId: string, creatorId: string, data: CreateTaskInput) => {
-  const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1', [projectId]);
-  if (projectCheck.rows.length === 0) throw new ApiError(404, 'project not found');
-  await assertUserHasProjectAccess(projectId, creatorId);
-
   const id = uuidv7();
+  const priority = data.priority || 'medium';
   const result = await pool.query(
     `INSERT INTO tasks (id, title, description, priority, project_id, assignee_id, due_date, creator_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     SELECT $1::uuid, $2, $3, $4::task_priority, p.id, $6::uuid, $7::date, $8::uuid
+     FROM projects p
+     WHERE p.id = $5::uuid
+     AND (
+       p.owner_id = $8::uuid
+       OR EXISTS (SELECT 1 FROM tasks t WHERE t.project_id = p.id AND t.assignee_id = $8::uuid)
+       OR EXISTS (SELECT 1 FROM tasks t WHERE t.project_id = p.id AND t.creator_id = $8::uuid)
+     )
      RETURNING *`,
     [
       id,
       data.title,
       data.description || null,
-      data.priority || 'medium',
+      priority,
       projectId,
-      data.assignee_id || null,
-      data.due_date || null,
+      data.assignee_id ?? null,
+      data.due_date ?? null,
       creatorId,
     ],
   );
-  return result.rows[0];
+
+  if (result.rows.length > 0) {
+    return result.rows[0];
+  }
+
+  const exists = await pool.query('SELECT id FROM projects WHERE id = $1', [projectId]);
+  if (exists.rows.length === 0) {
+    throw new ApiError(404, 'project not found');
+  }
+  throw new ApiError(403, 'forbidden');
 };
 
 const updateTask = async (taskId: string, userId: string, data: UpdateTaskInput) => {
@@ -98,12 +111,26 @@ const updateTask = async (taskId: string, userId: string, data: UpdateTaskInput)
 
   fields.push(`updated_at = CURRENT_TIMESTAMP`);
 
-  Object.entries(data).forEach(([key, value]) => {
-    if (value !== undefined) {
-      fields.push(`${key} = $${paramIndex++}`);
-      values.push(value);
-    }
-  });
+  const allowed: (keyof UpdateTaskInput)[] = [
+    'title',
+    'description',
+    'status',
+    'priority',
+    'assignee_id',
+    'due_date',
+  ];
+  for (const key of allowed) {
+    const value = data[key];
+    if (value === undefined) continue;
+    fields.push(`${key} = $${paramIndex++}`);
+    values.push(value);
+  }
+
+  const extraKeys = Object.keys(data).filter((k) => !allowed.includes(k as keyof UpdateTaskInput));
+  if (extraKeys.length > 0) {
+    const fieldsMap = Object.fromEntries(extraKeys.map((k) => [k, 'not allowed']));
+    throw new ApiError(400, 'validation failed', fieldsMap);
+  }
 
   if (fields.length === 1) {
     const res = await pool.query('SELECT * FROM tasks WHERE id = $1', [taskId]);
@@ -121,23 +148,25 @@ const updateTask = async (taskId: string, userId: string, data: UpdateTaskInput)
 };
 
 const deleteTask = async (taskId: string, userId: string) => {
-  const taskRes = await pool.query(
-    `SELECT t.creator_id, p.owner_id 
-     FROM tasks t
-     JOIN projects p ON t.project_id = p.id
-     WHERE t.id = $1`,
-    [taskId],
+  const del = await pool.query(
+    `DELETE FROM tasks t
+     USING projects p
+     WHERE t.id = $1::uuid
+     AND t.project_id = p.id
+     AND (t.creator_id = $2::uuid OR p.owner_id = $2::uuid)
+     RETURNING t.id`,
+    [taskId, userId],
   );
 
-  if (taskRes.rows.length === 0) throw new ApiError(404, 'not found');
-
-  const { creator_id, owner_id } = taskRes.rows[0];
-  if (creator_id !== userId && owner_id !== userId) {
-    throw new ApiError(403, 'forbidden');
+  if (del.rows.length > 0) {
+    return true;
   }
 
-  await pool.query('DELETE FROM tasks WHERE id = $1', [taskId]);
-  return true;
+  const exists = await pool.query('SELECT id FROM tasks WHERE id = $1', [taskId]);
+  if (exists.rows.length === 0) {
+    throw new ApiError(404, 'not found');
+  }
+  throw new ApiError(403, 'forbidden');
 };
 
 export { listTasks, createTask, updateTask, deleteTask };
