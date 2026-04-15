@@ -18,7 +18,7 @@ import {
   Clock,
   Loader2,
 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/lib/relativeTime';
 import { cn } from '@/lib/utils';
 
 const PAGE_SIZE = 12;

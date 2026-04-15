@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import type { Task } from '@/types';
 import { STATUS_CONFIG, PRIORITY_CONFIG } from '@/constants';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/lib/relativeTime';
 
 type Props = {
   task: Task;

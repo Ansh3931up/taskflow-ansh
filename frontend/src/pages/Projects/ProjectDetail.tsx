@@ -7,12 +7,8 @@ import {
   LayoutGrid,
   List as ListIcon,
   ChevronRight,
-  Clock,
   Save,
   X,
-  Inbox,
-  GripVertical,
-  Loader2,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
@@ -26,18 +22,17 @@ import { updateProject, deleteProject, fetchProjectStats } from '@/store/slices/
 import { fetchUsers } from '@/store/slices/userSlice';
 import { projectsApi } from '@/api/projects';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TaskSheet } from '@/components/projects/TaskSheet';
 import { ProjectDetailSkeleton } from '@/components/projects/ProjectDetailSkeleton';
 import { ProjectFiltersToolbar } from '@/components/projects/ProjectFiltersToolbar';
 import { ProjectStatsSummary } from '@/components/projects/ProjectStatsSummary';
+import { ProjectKanban } from '@/components/projects/ProjectKanban';
 import { TaskListRow } from '@/components/projects/TaskListRow';
 import type { Project, Task, TaskStatus } from '@/types';
-import { STATUS_CONFIG, PRIORITY_CONFIG } from '@/constants';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
 
 function ProjectDetailContent({ id }: { id: string }) {
   const navigate = useNavigate();
@@ -167,25 +162,6 @@ function ProjectDetailContent({ id }: { id: string }) {
     refreshStats();
   };
 
-  const onDragStart = (e: React.DragEvent, taskId: string) => {
-    e.dataTransfer.setData('taskId', taskId);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const onDrop = async (e: React.DragEvent, newStatus: TaskStatus) => {
-    e.preventDefault();
-    const taskId = e.dataTransfer.getData('taskId');
-    if (!taskId) return;
-    void dispatch(updateTask({ id: taskId, data: { status: newStatus } })).then(() =>
-      refreshStats(),
-    );
-  };
-
-  const onDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
   const startEditing = () => {
     if (!project) return;
     setEditName(project.name);
@@ -193,8 +169,7 @@ function ProjectDetailContent({ id }: { id: string }) {
     setIsEditing(true);
   };
 
-  const handleUpdateProject = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpdateProject = async () => {
     if (!isProjectOwner) return;
     if (!editName.trim()) return;
     const result = await dispatch(
@@ -300,7 +275,7 @@ function ProjectDetailContent({ id }: { id: string }) {
             )}
             {isEditing ? (
               <div className="mt-4 flex gap-2">
-                <Button type="button" size="sm" onClick={handleUpdateProject}>
+                <Button type="button" size="sm" onClick={() => void handleUpdateProject()}>
                   <Save className="h-4 w-4" />
                   Save
                 </Button>
@@ -392,118 +367,17 @@ function ProjectDetailContent({ id }: { id: string }) {
       </p>
 
       {viewMode === 'kanban' ? (
-        <div className="relative -mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto overflow-y-visible pb-2 pt-1 scroll-smooth sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3">
-          {tasksLoading && tasks.length === 0 ? (
-            <div className="absolute inset-0 z-10 flex items-start justify-center rounded-lg bg-background/60 pt-24 backdrop-blur-[1px]">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : null}
-          {(['todo', 'in_progress', 'done'] as TaskStatus[]).map((status) => {
-            const columnTasks = tasks.filter((t) => t.status === status);
-            const ColumnIcon = STATUS_CONFIG[status].icon;
-            return (
-              <div
-                key={status}
-                onDragOver={onDragOver}
-                onDrop={(e) => onDrop(e, status)}
-                className="w-[min(100%,280px)] shrink-0 snap-center space-y-3 sm:w-auto sm:min-w-0"
-              >
-                <div className="flex items-center gap-2 px-1">
-                  <ColumnIcon className="h-4 w-4 text-muted-foreground" aria-hidden />
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {STATUS_CONFIG[status].label}
-                  </h3>
-                  <span className="rounded-full border border-border bg-muted/50 px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
-                    {columnTasks.length}
-                  </span>
-                </div>
-
-                <div className="min-h-[min(400px,55vh)] space-y-2 rounded-xl border border-border bg-muted/25 p-2 shadow-inner sm:min-h-[400px]">
-                  {columnTasks.map((task) => (
-                    <Card
-                      key={task.id}
-                      draggable
-                      onDragStart={(e) => onDragStart(e, task.id)}
-                      className="cursor-grab overflow-hidden border-border/80 shadow-sm transition-all hover:-translate-y-px hover:shadow-elevated active:cursor-grabbing"
-                    >
-                      <CardContent className="p-3">
-                        <button
-                          type="button"
-                          className="w-full text-left"
-                          onClick={() => openEditSheet(task)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') openEditSheet(task);
-                          }}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0 flex-1 space-y-2">
-                              <span
-                                className={cn(
-                                  'inline-flex rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase',
-                                  PRIORITY_CONFIG[task.priority].color,
-                                )}
-                              >
-                                {PRIORITY_CONFIG[task.priority].label}
-                              </span>
-                              <p className="font-medium leading-snug text-foreground">
-                                {task.title}
-                              </p>
-                              {task.due_date ? (
-                                <p className="text-xs text-muted-foreground">
-                                  Due {task.due_date.slice(0, 10)}
-                                </p>
-                              ) : null}
-                            </div>
-                            <GripVertical
-                              className="h-4 w-4 shrink-0 text-muted-foreground/40"
-                              aria-hidden
-                            />
-                          </div>
-                        </button>
-
-                        <div className="mt-3 flex items-center justify-between border-t border-border pt-2">
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            {task.created_at
-                              ? formatDistanceToNow(new Date(task.created_at), { addSuffix: true })
-                              : '—'}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span
-                              className="flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background text-[10px] font-semibold text-muted-foreground"
-                              title={assigneeName(task.assignee_id)}
-                            >
-                              {assigneeName(task.assignee_id).slice(0, 1).toUpperCase()}
-                            </span>
-                            {canDeleteTask(task) ? (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                                onClick={(e) => handleDeleteTask(task.id, e)}
-                                aria-label="Delete task"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            ) : null}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-
-                  {columnTasks.length === 0 ? (
-                    <div className="flex min-h-[120px] flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border/80 p-4 text-center text-muted-foreground">
-                      <Inbox className="h-5 w-5 opacity-40" aria-hidden />
-                      <p className="text-xs">No tasks</p>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <ProjectKanban
+          tasks={tasks}
+          tasksLoading={tasksLoading}
+          onStatusChange={(taskId, status) => {
+            void dispatch(updateTask({ id: taskId, data: { status } })).then(() => refreshStats());
+          }}
+          onOpenTask={openEditSheet}
+          assigneeName={assigneeName}
+          canDeleteTask={canDeleteTask}
+          onDeleteTask={handleDeleteTask}
+        />
       ) : (
         <Card className="overflow-hidden border-border/80 shadow-elevated">
           <div className="hidden border-b border-border bg-muted/40 px-4 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:grid sm:grid-cols-[1fr_auto_auto_auto_auto] sm:items-center sm:gap-4">

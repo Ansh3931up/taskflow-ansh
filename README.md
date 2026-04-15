@@ -32,17 +32,18 @@ Assume **Docker Desktop** (or Docker Engine + Compose plugin) is installed — *
 
 ### 3.1 Start the full stack
 
+From a fresh clone you can run the stack with **no manual `.env` step**: Compose uses the same defaults as [`.env.example`](.env.example) (Postgres `postgres` / `postgres`, dev JWT, local CORS origins). Optional: `cp .env.example .env` and edit to override credentials or secrets.
+
 ```bash
 git clone https://github.com/<your-github>/taskflow-ansh.git
 cd taskflow-ansh
 docker compose up --build
+# or: npm run docker:up
 ```
 
-Equivalent from the repo root:
+You can also run **`npm run docker:up`** from the repo root (same Compose flow with `--build` per `package.json`).
 
-```bash
-npm run docker:up
-```
+On first container start the API runs **dbmate migrations** and applies **`backend/db/seed.sql`** (test user + project + three tasks). Compose uses a dedicated **`pgdata`** volume so a fresh Postgres matches the default `postgres` / `postgres` credentials. If you still see password errors after changing credentials without a new volume, run **`docker compose down -v`** once, then **`docker compose up --build`** again.
 
 Wait until:
 
@@ -58,7 +59,7 @@ Then open:
 | **API**     | http://localhost:4000              |
 | **Health**  | `GET http://localhost:4000/health` |
 
-**First boot:** the API container runs `dbmate up`, then `psql … -f db/seed.sql`, then starts Node. You should see seed `INSERT` lines in the backend logs.
+**First boot:** the API container runs `dbmate up`, then `psql … -f db/seed.sql`, then starts Node. You should see seed `INSERT` lines in the backend logs. (Migrations and seed are also documented in **§4**.)
 
 ### 3.2 Optional: use a root `.env` (recommended for non-demo use)
 
@@ -186,6 +187,8 @@ npm install
 # Run Postgres (e.g. via Docker) and copy backend/.env.example → backend/.env
 npm run dev
 ```
+
+**Production API (built backend):** `npm run build --workspace=backend && npm run start` (or `npm start` from the repo root after build).
 
 ---
 

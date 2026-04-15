@@ -98,11 +98,11 @@ const Register: React.FC = () => {
                 <PasswordInput
                   id="register-password"
                   autoComplete="new-password"
-                  placeholder="At least 8 characters"
+                  placeholder="At least 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={8}
+                  minLength={6}
                   disabled={loading}
                 />
               </div>

@@ -1,10 +1,12 @@
 import express, { Application, Request, Response } from 'express';
+import type { CorsOptions } from 'cors';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 
+import { config } from './config';
 import apiRoutes from './routes';
 import { errorHandler } from './utils';
 import { logger } from './utils/logger';
@@ -13,10 +15,35 @@ dotenv.config();
 
 const app: Application = express();
 
-// Security and Optimization Middlewares
-app.use(helmet()); // Sets robust HTTP security headers
-app.use(cors()); // Enables cross-origin requests
-app.use(compression()); // GZIP payload compression for speed
+const allowedOrigins = new Set(config.CORS_ALLOWED_ORIGINS);
+
+const corsOptions: CorsOptions = {
+  origin(origin, callback) {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    if (allowedOrigins.has(origin)) {
+      callback(null, true);
+      return;
+    }
+    logger.warn({ origin }, 'CORS request rejected: origin not in CORS_ALLOWED_ORIGINS');
+    callback(null, false);
+  },
+  credentials: true,
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204,
+  maxAge: 86_400,
+};
+
+app.use(cors(corsOptions));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }),
+);
+app.use(compression());
 
 // Pipe all HTTP request logs through pino for a unified log stream
 const morganStream = {
