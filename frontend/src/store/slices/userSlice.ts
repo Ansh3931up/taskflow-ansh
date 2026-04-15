@@ -1,12 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { usersApi } from '@/api/users';
+import { getApiErrorMessage } from '@/lib/api-helpers';
 import type { User } from '@/types';
 
 export const fetchUsers = createAsyncThunk('users/fetchList', async (_, { rejectWithValue }) => {
   try {
     return await usersApi.list();
-  } catch (error: any) {
-    return rejectWithValue(error.error || 'Failed to fetch users');
+  } catch (error: unknown) {
+    return rejectWithValue(getApiErrorMessage(error, 'Failed to fetch users'));
   }
 });
 
