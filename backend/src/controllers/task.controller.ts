@@ -5,17 +5,26 @@ import {
   updateTask as svcUpdateTask,
   deleteTask as svcDeleteTask,
 } from '../services';
+import { parseListTasksQuery } from '../validations/task.validation';
+import { ApiError } from '../utils/ApiError';
 import { ApiResponse } from '../utils/ApiResponse';
 import { asyncHandler } from '../utils/asyncHandler';
 
 const listTasks = asyncHandler(async (req: Request, res: Response) => {
-  const { status, assignee } = req.query;
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
+  const parsed = parseListTasksQuery(req.query);
+  if (!parsed.success) {
+    const fields: Record<string, string> = {};
+    parsed.error.issues.forEach((issue) => {
+      const key = issue.path[0];
+      if (key !== undefined) fields[String(key)] = issue.message;
+    });
+    throw new ApiError(400, 'validation failed', fields);
+  }
 
+  const { status, assignee, page, limit } = parsed.data;
   const data = await svcListTasks(req.params.id as string, req.user!.id, {
-    status: status as string,
-    assignee: assignee as string,
+    status,
+    assignee,
     page,
     limit,
   });

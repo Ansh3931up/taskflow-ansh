@@ -10,8 +10,8 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 
-# Install curl and dbmate for migrations
-RUN apk add --no-cache curl && \
+# dbmate for migrations; postgresql-client for seed SQL
+RUN apk add --no-cache curl postgresql16-client && \
     curl -fsSL https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64 -o /usr/local/bin/dbmate && \
     chmod +x /usr/local/bin/dbmate
 
@@ -23,5 +23,5 @@ COPY --from=builder /app/db ./db
 # Environment variables will be injected by docker-compose
 EXPOSE 4000
 
-# Run migrations and start the server
-CMD ["sh", "-c", "dbmate up && node dist/index.js"]
+# Migrations, seed data, then API (seed is idempotent on fixed UUIDs)
+CMD ["sh", "-c", "dbmate up && psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f db/seed.sql && node dist/index.js"]

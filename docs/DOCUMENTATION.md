@@ -64,14 +64,18 @@ flowchart LR
 
 Copy `.env.example` to `.env` at the repo root (and/or `backend/.env` depending on your compose setup). Typical variables:
 
-| Variable       | Used by               | Purpose                                                   |
-| -------------- | --------------------- | --------------------------------------------------------- |
-| `DATABASE_URL` | Backend / dbmate      | PostgreSQL connection string                              |
-| `JWT_SECRET`   | Backend               | Secret for signing JWTs (must not be hardcoded in source) |
-| `PORT`         | Backend               | HTTP listen port (often `4000`)                           |
-| `VITE_API_URL` | Frontend (build-time) | Base URL for API calls from the browser                   |
+| Variable                              | Used by                                      | Purpose                                                                                        |
+| ------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `DB_USER` / `DB_PASSWORD` / `DB_NAME` | Docker Compose `db` + backend `DATABASE_URL` | Postgres credentials — **set in `.env`**, no weak defaults in compose                          |
+| `DATABASE_URL`                        | Backend (local dev)                          | When not using compose-generated URL, point at local Postgres                                  |
+| `JWT_SECRET`                          | Backend                                      | Secret for signing JWTs — **required** in `.env` for Docker (no sample default in compose)     |
+| `PORT`                                | Backend                                      | HTTP listen port (often `4000`)                                                                |
+| `CORS_ALLOWED_ORIGINS`                | Backend                                      | Comma-separated browser origins (exact `Origin` match); must align with where the UI is served |
+| `VITE_API_URL`                        | Frontend (build-time)                        | Base URL for API calls from the browser                                                        |
 
 The frontend build embeds `VITE_*` at compile time. In Docker, the build stage receives the correct API URL for the browser’s network path.
+
+**Docker:** `docker compose up --build` works with Compose defaults (same as `.env.example`); optional root `.env` overrides them. The API client reads the token via `configureApiAuth()` after the Redux store is created to avoid a store ↔ `api.ts` import cycle.
 
 ---
 

@@ -34,7 +34,7 @@ interface AuthState {
   error: string | null;
 }
 
-// Satisfying constraint "Persisting Auth state structurally natively logically cleanly against refresh boundaries"
+// Rehydrate auth from localStorage on first load (same keys as fulfilled handlers).
 const token = localStorage.getItem('token');
 const userStr = localStorage.getItem('user');
 
@@ -62,7 +62,6 @@ const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // Handle Loading/Resolution cleanly explicitly preventing screen artifacts
     builder.addCase(loginUser.pending, (state) => {
       state.loading = true;
       state.error = null;
@@ -73,7 +72,6 @@ const authSlice = createSlice({
       state.token = action.payload.token;
       state.isAuthenticated = true;
 
-      // Physically lock constraints securely identically across all boundaries perfectly securely
       localStorage.setItem('token', action.payload.token);
       localStorage.setItem('user', JSON.stringify(action.payload.user));
     });
@@ -82,7 +80,6 @@ const authSlice = createSlice({
       state.error = action.payload as string;
     });
 
-    // Provide identically robust explicit registration structurally mapping seamlessly
     builder.addCase(registerUser.pending, (state) => {
       state.loading = true;
       state.error = null;
